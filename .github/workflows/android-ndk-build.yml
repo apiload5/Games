@@ -1,15 +1,21 @@
-name: Build Android SO
+name: Build OpenArena Android SO
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch: # Manual trigger
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout empty repo
       uses: actions/checkout@v3
+
+    - name: Clone OpenArena Engine
+      run: |
+        git clone https://github.com/OpenArena/engine.git openarena-engine
+        cd openarena-engine
+        git submodule update --init --recursive
 
     - name: Install required packages
       run: |
@@ -31,6 +37,7 @@ jobs:
 
     - name: Build with CMake
       run: |
+        cd openarena-engine
         mkdir build && cd build
         cmake \
           -DANDROID_ABI=armeabi-v7a \
@@ -42,7 +49,7 @@ jobs:
     - name: Upload SO artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: android-libs
+        name: openarena-android-libs
         path: |
-          build/**/*.so
+          openarena-engine/build/**/*.so
           
