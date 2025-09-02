@@ -1,4 +1,4 @@
-name: Build Cordova APK
+name: Build APK with Capacitor
 
 on:
   workflow_dispatch:
@@ -8,27 +8,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install Cordova
-        run: npm install -g cordova
-
-      - name: Add Android platform
+      - name: Install dependencies
         run: |
-          cordova platform add android
+          npm init -y
+          npm install @capacitor/core @capacitor/cli
 
-      - name: Build APK
+      - name: Init Capacitor
         run: |
-          cordova build android --release
+          npx cap init "Bobble Shooter" "com.ticnocity.bobbleshooter"
+
+      - name: Add Android
+        run: npx cap add android
+
+      - name: Copy Web Files
+        run: mkdir -p www && cp -r * www/
+
+      - name: Build Android APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: bobble-shooter-apk
-          path: platforms/android/app/build/outputs/apk/release/*.apk
+          path: android/app/build/outputs/apk/release/*.apk
