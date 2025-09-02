@@ -25,9 +25,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Create package.json
+        run: |
+          if [ ! -f package.json ]; then
+            echo '{"name": "bobble-shooter", "version": "1.0.0"}' > package.json
+          fi
+
       - name: Install Capacitor and Android
         run: |
-          npm ci || npm install
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
       - name: Initialize Capacitor
