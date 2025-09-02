@@ -1,0 +1,38 @@
+name: Build Cordova APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Create Cordova Project
+        run: |
+          cordova create mygame com.example.mygame MyGame
+          cp -r * mygame/www || true
+          cd mygame
+          cordova platform add android
+
+      - name: Build APK
+        run: |
+          cd mygame
+          cordova build android --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-apk
+          path: mygame/platforms/android/app/build/outputs/apk/release/*.apk
+          
