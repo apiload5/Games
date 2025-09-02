@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Capacitor and Android platform
+      - name: Install Capacitor and Android
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
@@ -32,6 +32,9 @@ jobs:
         run: |
           mkdir -p www
           rsync -av --exclude=www ./ www/
+
+      - name: Add Android Platform
+        run: npx cap add android
 
       - name: Sync Android Project
         run: npx cap sync android
