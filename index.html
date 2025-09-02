@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Bobble Shooter – Offline + Ads</title>
+  <style>
+    /* Optional local font usage */
+    @font-face {
+      font-family: 'Fredoka';
+      src: url('fonts/Fredoka.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #0e1525;
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    .game-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw; height: 100vh;
+      background: linear-gradient(180deg,#1e293b,#0f172a);
+    }
+
+    .ui-panel {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.3);
+      padding: 8px 16px;
+      border-radius: 12px;
+      color: white;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .message-box {
+      display: none;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 20px;
+      border-radius: 20px;
+      text-align: center;
+    }
+
+    .button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      background: linear-gradient(180deg,#ff8c00,#ff6347);
+      color: white;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .button:active {
+      transform: scale(0.95);
+    }
+
+    /* Ad Overlay */
+    #ad-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: white;
+    }
+
+    #ad-frame {
+      border: none;
+      width: 90%;
+      max-width: 350px;
+      height: 60%;
+      max-height: 300px;
+      border-radius: 10px;
+    }
+
+    #skip-btn {
+      margin-top: 12px;
+      padding: 10px 20px;
+      border: none;
+      background: #888;
+      color: #fff;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: not-allowed;
+    }
+    #skip-btn.enabled {
+      background: #4CAF50;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="ui-panel">Score: <span id="score">0</span></div>
+    <div id="gameOverScreen" class="message-box">
+      <h2>Game Over</h2>
+      <p>Final Score: <span id="finalScore">0</span></p>
+      <button id="restartButton" class="button">Play Again</button>
+    </div>
+  </div>
+
+  <!-- Ad Overlay -->
+  <div id="ad-overlay">
+    <iframe id="ad-frame"
+      src="https://conveyedorchidframes.com/g1h38t54?key=18021df7f593d8adbdd7d94179da890c">
+    </iframe>
+    <button id="skip-btn" disabled>Skip in 5s</button>
+  </div>
+
+  <!-- Local Sound Files -->
+  <audio id="shootSound" src="sounds/shoot.mp3" preload="auto"></audio>
+  <audio id="popSound" src="sounds/pop.mp3" preload="auto"></audio>
+  <audio id="gameOverSound" src="sounds/gameover.mp3" preload="auto"></audio>
+
+  <script>
+    // AD LOGIC
+    function showAd(callback) {
+      const overlay = document.getElementById('ad-overlay');
+      const skipBtn = document.getElementById('skip-btn');
+      overlay.style.display = 'flex';
+      skipBtn.disabled = true;
+      skipBtn.classList.remove('enabled');
+      skipBtn.textContent = 'Skip in 5s';
+
+      let count = 5;
+      const timer = setInterval(() => {
+        count--;
+        skipBtn.textContent = count > 0 ? `Skip in ${count}s` : 'Skip Ad';
+        if (count <= 0) {
+          clearInterval(timer);
+          skipBtn.disabled = false;
+          skipBtn.classList.add('enabled');
+          skipBtn.onclick = () => {
+            overlay.style.display = 'none';
+            if (callback) callback();
+          };
+        }
+      }, 1000);
+    }
+
+    // GAME LOGIC (Simplified for Bobble Shooter)
+    window.onload = () => {
+      showAd(startGame); // Ad at launch
+    };
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('score');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const finalScore = document.getElementById('finalScore');
+    const restartButton = document.getElementById('restartButton');
+
+    let score = 0, bubbles = [], projectiles = [], isGameOver = false;
+    const bubbleColors = ['#f87171','#fb923c','#facc15','#4ade80','#60a5fa','#a78bfa','#f472b6'];
+    const bubbleRadius = 18;
+    const shooter = { x: 0, y: 0, radius: 15, angle: -Math.PI/2 };
+
+    function playAudio(id) {
+      const s = document.getElementById(id);
+      if (s) { s.currentTime = 0; s.play(); }
+    }
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      shooter.x = canvas.width / 2;
+      shooter.y = canvas.height - 30;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function createBubble() {
+      const color = bubbleColors[Math.floor(Math.random()*bubbleColors.length)];
+      const x = Math.random()*(canvas.width - bubbleRadius*2) + bubbleRadius;
+      const y = Math.random()*(canvas.height/3);
+      const dx = (Math.random()-0.5)*2, dy = (Math.random()-0.5)*2;
+      bubbles.push({ x, y, radius: bubbleRadius, color, dx, dy });
+    }
+
+    function drawBubble(b) {
+      const g = ctx.createRadialGradient(b.x-5, b.y-5, b.radius/4, b.x, b.y, b.radius);
+      g.addColorStop(0, 'white'); g.addColorStop(1, b.color);
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+
+    function drawShooter() {
+      ctx.save();
+      ctx.translate(shooter.x, shooter.y);
+      ctx.rotate(shooter.angle);
+      ctx.fillStyle = '#ffcc00';
+      ctx.fillRect(-5, -30, 10, 30);
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(shooter.x, shooter.y, shooter.radius, 0, Math.PI*2);
+      ctx.fillStyle = '#ff4444';
+      ctx.fill();
+    }
+
+    function shootBubble() {
+      if (isGameOver) return;
+      const speed = 9;
+      projectiles.push({
+        x: shooter.x,
+        y: shooter.y,
+        radius: 10,
+        dx: speed * Math.cos(shooter.angle),
+        dy: speed * Math.sin(shooter.angle),
+        color: bubbleColors[Math.floor(Math.random()*bubbleColors.length)]
+      });
+      playAudio('shootSound');
+    }
+
+    function endGame() {
+      isGameOver = true;
+      finalScore.textContent = score;
+      gameOverScreen.style.display = 'block';
+      playAudio('gameOverSound');
+      showAd(() => {
+        restartGame();
+      });
+    }
+
+    function update() {
+      if (isGameOver) return;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      bubbles.forEach((b,i) => {
+        b.x += b.dx;
+        b.y += b.dy;
+        if (b.x + b.radius > canvas.width || b.x - b.radius < 0) b.dx *= -1;
+        if (b.y - b.radius < 0) b.dy *= -1;
+        if (b.y + b.radius > canvas.height) endGame();
+        drawBubble(b);
+      });
+
+      projectiles.forEach((p, pi) => {
+        p.x += p.dx; p.y += p.dy;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+        ctx.fillStyle = p.color; ctx.fill();
+
+        bubbles.forEach((b, bi) => {
+          if (Math.hypot(p.x - b.x, p.y - b.y) < p.radius + b.radius) {
+            playAudio('popSound');
+            score += 10;
+            scoreDisplay.textContent = score;
+            bubbles.splice(bi, 1);
+            projectiles.splice(pi, 1);
+            createBubble();
+          }
+        });
+      });
+
+      drawShooter();
+      requestAnimationFrame(update);
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const r = canvas.getBoundingClientRect();
+      shooter.angle = Math.atan2(e.clientY - r.top - shooter.y, e.clientX - r.left - shooter.x);
+    });
+
+    canvas.addEventListener('click', shootBubble);
+    restartButton.addEventListener('click', restartGame);
+
+    function restartGame() {
+      score = 0; bubbles = []; projectiles = []; isGameOver = false;
+      gameOverScreen.style.display = 'none';
+      scoreDisplay.textContent = '0';
+      for (let i = 0; i < 10; i++) createBubble();
+      update();
+    }
+
+    // Initialize game
+    for (let i = 0; i < 10; i++) createBubble();
+    update();
+
+  </script>
+</body>
+</html>
+  
