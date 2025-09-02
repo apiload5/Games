@@ -11,30 +11,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Install dependencies
+      - name: Install Capacitor and Android platform
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Init Capacitor
+      - name: Initialize Capacitor
         run: |
-          npx cap init "Bobble Shooter" "com.ticnocity.bobbleshooter"
+          npx cap init "Bobble Shooter" "com.ticnocity.bobbleshooter" --web-dir=www
 
-      - name: Add Android
-        run: npx cap add android
-
-      - name: Copy Web Files
+      - name: Prepare Web Files
         run: |
           mkdir -p www
-          shopt -s extglob
-          cp -r !(www) www/
+          rsync -av --exclude=www ./ www/
+
+      - name: Sync Android Project
+        run: npx cap sync android
 
       - name: Build Android APK
         run: |
