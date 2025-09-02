@@ -19,6 +19,12 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Install Capacitor and Android
         run: |
           npm init -y
@@ -49,4 +55,3 @@ jobs:
         with:
           name: bobble-shooter-apk
           path: android/app/build/outputs/apk/release/*.apk
-          
