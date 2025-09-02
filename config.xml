@@ -1,8 +1,13 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.example.mygame" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
-    <name>My Bobble Shooter</name>
-    <description>Offline HTML5 Game with Ads</description>
-    <author href="https://ticnocity.blogspot.com">Ticnocity</author>
+<widget id="com.ticnocity.bobbleshooter" version="1.0.0"
+    xmlns="http://www.w3.org/ns/widgets"
+    xmlns:cdv="http://cordova.apache.org/ns/1.0">
+
+    <name>Bobble Shooter</name>
+    <description>Fun offline HTML5 bubble shooting game with ads support</description>
+    <author email="ticnocity@gmail.com" href="https://ticnocity.blogspot.com">
+        Ticnocity
+    </author>
 
     <!-- Game start file -->
     <content src="index.html" />
@@ -10,7 +15,6 @@
     <!-- Preferences -->
     <preference name="Fullscreen" value="true" />
     <preference name="Orientation" value="portrait" />
-    <preference name="SplashScreenDelay" value="3000" />
+    <preference name="SplashScreenDelay" value="2000" />
     <preference name="BackgroundColor" value="#000000" />
 </widget>
-      
