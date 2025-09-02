@@ -27,7 +27,7 @@ jobs:
 
       - name: Install Capacitor and Android
         run: |
-          npm init -y
+          npm ci || npm install
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
       - name: Initialize Capacitor
@@ -42,6 +42,11 @@ jobs:
       - name: Add Android Platform
         run: npx cap add android
 
+      - name: Fix Gradle Java Version
+        run: |
+          sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/app/build.gradle || true
+          sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/build.gradle || true
+
       - name: Sync Android Project
         run: npx cap sync android
 
@@ -55,3 +60,4 @@ jobs:
         with:
           name: bobble-shooter-apk
           path: android/app/build/outputs/apk/release/*.apk
+          
