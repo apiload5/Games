@@ -1,20 +1,35 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.ticnocity.bobbleshooter" version="1.0.0"
-    xmlns="http://www.w3.org/ns/widgets"
-    xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.ticnocity.bobbleshooter"
+        version="1.0.0"
+        xmlns="http://www.w3.org/ns/widgets"
+        xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
     <name>Bobble Shooter</name>
-    <description>Fun offline HTML5 bubble shooting game with ads support</description>
-    <author email="ticnocity@gmail.com" href="https://ticnocity.blogspot.com">
+    <description>
+        A fun bubble shooting game built by Ticnocity.
+    </description>
+    <author email="support@ticnocity.blogspot.com" href="https://ticnocity.blogspot.com">
         Ticnocity
     </author>
-
-    <!-- Game start file -->
+    
+    <!-- App preferences -->
     <content src="index.html" />
-
-    <!-- Preferences -->
     <preference name="Fullscreen" value="true" />
     <preference name="Orientation" value="portrait" />
-    <preference name="SplashScreenDelay" value="2000" />
-    <preference name="BackgroundColor" value="#000000" />
+    <preference name="SplashScreenDelay" value="3000" />
+    <preference name="ShowTitle" value="false" />
+    <preference name="WebViewBounce" value="false" />
+
+    <!-- Android Permissions -->
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <icon density="mdpi" src="res/icon/android/icon.png" />
+        <splash density="port-mdpi" src="res/screen/android/splash.png" />
+    </platform>
+
+    <!-- Allow navigation -->
+    <allow-navigation href="*" />
+    <allow-intent href="*" />
+    <access origin="*" />
 </widget>
+        
